@@ -8,14 +8,24 @@ use Turn::Right;
 use std::str::FromStr;
 
 pub fn run() {
-    run_part_1("./puzzle-inputs/day-1-example.txt"); // 3
-    run_part_1("./puzzle-inputs/day-1-input.txt");
+    let example_data = read_to_string("./puzzle-inputs/day-1-example.txt").unwrap_or_else(|_| {
+        panic!(
+            "Failed to read file {}",
+            "./puzzle-inputs/day-1-example.txt"
+        )
+    });
+    let puzzle_data = read_to_string("./puzzle-inputs/day-1-input.txt").unwrap_or_else(|_| {
+        panic!(
+            "Failed to read file {}",
+            "./puzzle-inputs/day-1-example.txt"
+        )
+    });
 
-    run_part_2_broken("./puzzle-inputs/day-1-example.txt"); // 6
-    run_part_2_broken("./puzzle-inputs/day-1-input.txt");
+    run_part_1(example_data.as_str()); // 3
+    run_part_1(puzzle_data.as_str());
 
-    run_part_2_naive("./puzzle-inputs/day-1-example.txt"); // 6
-    run_part_2_naive("./puzzle-inputs/day-1-input.txt");
+    run_part_2(example_data.as_str()); // 6
+    run_part_2(puzzle_data.as_str());
 }
 
 struct Dial {
@@ -79,13 +89,7 @@ impl Dial {
             if from == 0 {
                 amount_of_0s_hit -= 1;
             }
-        } else if to < 0 && from != 0 {
-            amount_of_0s_hit = (to / -(DIAL_MAX as i16)) + 1;
-            println!(
-                "; during this rotation, it points to 0 {} times.",
-                amount_of_0s_hit
-            );
-        } else if to > 100 {
+        } else if to > 99 {
             amount_of_0s_hit = to / (DIAL_MAX as i16);
             println!(
                 "; during this rotation, it points to 0 {} times.",
@@ -99,14 +103,11 @@ impl Dial {
     }
 }
 
-fn run_part_1(path: &str) {
-    let stream = read_to_string(path).expect("Failed to read file");
-
+fn run_part_1(input: &str) {
     let mut dial = Dial { position: 50 };
-
     let mut amount_of_0_positions = 0;
 
-    stream.lines().for_each(|line| {
+    input.lines().for_each(|line| {
         let direction = parse_turn(&line);
 
         dial.turn(direction);
@@ -118,6 +119,23 @@ fn run_part_1(path: &str) {
 
     println!(
         "The dial position is {}, the amount of 0 positions found was {}.",
+        dial.position, amount_of_0_positions
+    );
+}
+
+fn run_part_2(input: &str) {
+    let mut dial = Dial { position: 50 };
+
+    let mut amount_of_0_positions = 0;
+
+    input.lines().for_each(|line| {
+        let direction = parse_turn(&line);
+
+        amount_of_0_positions += dial.turn(direction);
+    });
+
+    println!(
+        "The dial position is {}, the amount of times the dial hit 0 was {}.",
         dial.position, amount_of_0_positions
     );
 }
@@ -137,62 +155,6 @@ fn parse_turn(line: &&str) -> Turn {
             panic!("Unexpected direction")
         }
     }
-}
-
-fn run_part_2_naive(path: &str) {
-    let stream = read_to_string(path).expect("Failed to read file");
-
-    let mut dial = 50;
-    let mut amount_of_0_positions = 0;
-
-    stream.lines().for_each(|line| {
-        let direction = parse_turn(&line);
-        let count = match direction {
-            Left(n) => n,
-            Right(n) => n,
-        };
-
-        for _ in 0..count {
-            match direction {
-                Right(_) => dial += 1,
-                Left(_) => dial -= 1,
-            }
-
-            if dial > 99 {
-                dial = 0;
-            } else if dial < 0 {
-                dial = 99;
-            }
-
-            if dial == 0 {
-                amount_of_0_positions += 1;
-            }
-        }
-    });
-
-    println!(
-        "The dial position is {}, the amount of times the dial hit 0 was {}.",
-        dial, amount_of_0_positions
-    );
-}
-
-fn run_part_2_broken(path: &str) {
-    let stream = read_to_string(path).expect("Failed to read file");
-
-    let mut dial = Dial { position: 50 };
-
-    let mut amount_of_0_positions = 0;
-
-    stream.lines().for_each(|line| {
-        let direction = parse_turn(&line);
-
-        amount_of_0_positions += dial.turn(direction);
-    });
-
-    println!(
-        "The dial position is {}, the amount of times the dial hit 0 was {}.",
-        dial.position, amount_of_0_positions
-    );
 }
 
 #[test]
