@@ -17,8 +17,8 @@ pub fn run() {
     run_part_1(example_data.as_str());
     run_part_1(puzzle_data.as_str());
 
-    // run_part_2(example_data.as_str());
-    // run_part_2(puzzle_data.as_str());
+    run_part_2(example_data.as_str());
+    run_part_2(puzzle_data.as_str());
 }
 
 struct IdRange {
@@ -65,7 +65,27 @@ fn run_part_1(input: &str) {
         }
     }
 
-    println!("The sum of all invalid ids is {}", sum_of_invalid_ids);
+    println!(
+        "The sum of all ids which are composed of a single repeated sequence is {}",
+        sum_of_invalid_ids
+    );
+}
+
+fn run_part_2(input: &str) {
+    let mut sum_of_invalid_ids: u64 = 0;
+
+    for range in read_id_ranges(input).iter() {
+        for id in range.first_id..=range.last_id {
+            if has_any_repeated_number_sequence(id) {
+                sum_of_invalid_ids += id;
+            }
+        }
+    }
+
+    println!(
+        "The sum of all ids which are composed of multiple repeating sequences is {}",
+        sum_of_invalid_ids
+    );
 }
 
 fn has_twice_repeated_number_sequence(id: u64) -> bool {
@@ -87,8 +107,38 @@ fn has_twice_repeated_number_sequence(id: u64) -> bool {
     high_part == low_part
 }
 
+fn has_any_repeated_number_sequence(id: u64) -> bool {
+    let id = id.to_string();
+    let digits_in_id = id.len();
+    let max_group_size = digits_in_id / 2;
+
+    'group_size_iterator: for group_size in (1..=max_group_size).rev() {
+        if !digits_in_id.is_multiple_of(group_size) {
+            // If the number of digits is not divisible by the group size, skip the group.
+            continue 'group_size_iterator;
+        }
+
+        let number_of_potential_groups = digits_in_id / group_size;
+        let to_match = id[0..group_size].to_string();
+        for group in 1..number_of_potential_groups {
+            let subgroup_start = group * group_size;
+            let subgroup_end = subgroup_start + group_size;
+            let subgroup = &id[subgroup_start..subgroup_end];
+            if subgroup != to_match {
+                // If there is no match, continue
+                continue 'group_size_iterator;
+            }
+        }
+
+        // All groups match!
+        return true;
+    }
+
+    false
+}
+
 #[test]
-fn test_is_invalid_id() {
+fn test_has_twice_repeated_number_sequence() {
     assert!(has_twice_repeated_number_sequence(11));
     assert!(has_twice_repeated_number_sequence(22));
     assert!(has_twice_repeated_number_sequence(99));
@@ -107,6 +157,20 @@ fn test_is_invalid_id() {
     assert!(!has_twice_repeated_number_sequence(2156));
     assert!(!has_twice_repeated_number_sequence(12357));
     assert!(!has_twice_repeated_number_sequence(84532));
+}
+
+#[test]
+fn test_has_any_repeated_number_sequence() {
+    assert!(has_any_repeated_number_sequence(11));
+    assert!(has_any_repeated_number_sequence(1212));
+    assert!(has_any_repeated_number_sequence(121212));
+    assert!(has_any_repeated_number_sequence(123123));
+}
+
+#[test]
+fn test_inverted_has_repeated_number_sequence() {
+    assert!(!has_any_repeated_number_sequence(12));
+    assert!(!has_any_repeated_number_sequence(12312));
 }
 
 #[test]
@@ -129,10 +193,10 @@ fn show_calculation_validations() {
     println!("Power of 10: {}", 10_u64.pow(digits_in_number as u32 / 2));
     println!(
         "High part: {}",
-        number_to_split / (10_u64.pow((digits_in_number as u32 / 2)))
+        number_to_split / (10_u64.pow(digits_in_number as u32 / 2))
     );
     println!(
         "Low part: {}",
-        number_to_split / (10_u64.pow((digits_in_number as u32 / 2)))
+        number_to_split / (10_u64.pow(digits_in_number as u32 / 2))
     );
 }
