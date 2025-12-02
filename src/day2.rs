@@ -92,8 +92,7 @@ fn has_twice_repeated_number_sequence(id: u64) -> bool {
     // 1. Find the logarithmic size of the id
     // 2. If even, split the number into two parts.
     // 3. Compare the two parts.
-
-    let digits_in_number: u64 = (id.ilog(10) + 1) as u64;
+    let digits_in_number: u64 = (id.ilog10() + 1) as u64;
 
     // Odd numbers cannot be an exact twice repeating value.
     if digits_in_number % 2 == 1 {
@@ -108,8 +107,7 @@ fn has_twice_repeated_number_sequence(id: u64) -> bool {
 }
 
 fn has_any_repeated_number_sequence(id: u64) -> bool {
-    let id = id.to_string();
-    let digits_in_id = id.len();
+    let digits_in_id = id.ilog10() + 1;
     let max_group_size = digits_in_id / 2;
 
     'group_size_iterator: for group_size in (1..=max_group_size).rev() {
@@ -119,12 +117,12 @@ fn has_any_repeated_number_sequence(id: u64) -> bool {
         }
 
         let number_of_potential_groups = digits_in_id / group_size;
-        let to_match = id[0..group_size].to_string();
+        let to_match = find_grouped_digits_by_group_size_and_index(id, group_size as u64, 0);
+
         for group in 1..number_of_potential_groups {
-            let subgroup_start = group * group_size;
-            let subgroup_end = subgroup_start + group_size;
-            let subgroup = &id[subgroup_start..subgroup_end];
-            if subgroup != to_match {
+            let found_group =
+                find_grouped_digits_by_group_size_and_index(id, group_size as u64, group as u64);
+            if found_group != to_match {
                 // If there is no match, continue
                 continue 'group_size_iterator;
             }
@@ -135,6 +133,23 @@ fn has_any_repeated_number_sequence(id: u64) -> bool {
     }
 
     false
+}
+
+fn find_grouped_digits_by_group_size_and_index(
+    number_to_shift: u64,
+    group_size: u64,
+    group_index: u64,
+) -> u64 {
+    let total_digits: u64 = number_to_shift.ilog10() as u64 + 1;
+    let total_groups: u64 = total_digits / group_size;
+
+    let digits_to_remove_right = (total_groups - (group_index + 1)) * group_size;
+
+    let id_right_removed = number_to_shift / (10_u64.pow(digits_to_remove_right as u32));
+    let redundant_left = id_right_removed / 10_u64.pow(group_size as u32);
+    let redundant_left = redundant_left * 10_u64.pow(group_size as u32);
+
+    id_right_removed - redundant_left
 }
 
 #[test]
@@ -175,11 +190,11 @@ fn test_inverted_has_repeated_number_sequence() {
 
 #[test]
 fn show_logarithmics() {
-    println!("{}", 1_u64.ilog(10));
-    println!("{}", 9_u64.ilog(10));
-    println!("{}", 10_u64.ilog(10));
-    println!("{}", 99_u64.ilog(10));
-    println!("{}", 100_u64.ilog(10));
+    println!("{}", 1_u64.ilog10());
+    println!("{}", 9_u64.ilog10());
+    println!("{}", 10_u64.ilog10());
+    println!("{}", 99_u64.ilog10());
+    println!("{}", 100_u64.ilog10());
 }
 
 #[test]
@@ -187,7 +202,7 @@ fn show_calculation_validations() {
     println!("Expected result: {}", 123_456 / 1000);
 
     let number_to_split: u64 = 123_456;
-    let digits_in_number: u64 = (number_to_split.ilog(10) + 1) as u64;
+    let digits_in_number: u64 = (number_to_split.ilog10() + 1) as u64;
     println!("Digits in number: {}", digits_in_number);
     println!("Power of 10: {}", 10_u64.pow(digits_in_number as u32));
     println!("Power of 10: {}", 10_u64.pow(digits_in_number as u32 / 2));
@@ -198,5 +213,79 @@ fn show_calculation_validations() {
     println!(
         "Low part: {}",
         number_to_split / (10_u64.pow(digits_in_number as u32 / 2))
+    );
+}
+
+#[test]
+fn show_calculate_shifting_decimals() {
+    let number_to_shift = 123_456_789_246;
+
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 3, 0),
+        123
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 3, 1),
+        456
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 3, 2),
+        789
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 3, 3),
+        246
+    );
+
+    // Same number as before, but displayed in pairs of 2
+    let number_to_shift = 12_34_56_78_92_46;
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 2, 0),
+        12
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 2, 1),
+        34
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 2, 2),
+        56
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 2, 3),
+        78
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 2, 4),
+        92
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 2, 5),
+        46
+    );
+
+    // Same number as before, but displayed in pairs of 4
+    let number_to_shift = 1234_5678_9246;
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 4, 0),
+        1234
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 4, 1),
+        5678
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 4, 2),
+        9246
+    );
+
+    let number_to_shift = 12;
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 1, 0),
+        1
+    );
+    assert_eq!(
+        find_grouped_digits_by_group_size_and_index(number_to_shift, 1, 1),
+        2
     );
 }
