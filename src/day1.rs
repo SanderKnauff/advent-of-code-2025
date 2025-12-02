@@ -14,12 +14,8 @@ pub fn run() {
             "./puzzle-inputs/day-1-example.txt"
         )
     });
-    let puzzle_data = read_to_string("./puzzle-inputs/day-1-input.txt").unwrap_or_else(|_| {
-        panic!(
-            "Failed to read file {}",
-            "./puzzle-inputs/day-1-example.txt"
-        )
-    });
+    let puzzle_data = read_to_string("./puzzle-inputs/day-1-input.txt")
+        .unwrap_or_else(|_| panic!("Failed to read file {}", "./puzzle-inputs/day-1-input.txt"));
 
     run_part_1(example_data.as_str()); // 3
     run_part_1(puzzle_data.as_str());
