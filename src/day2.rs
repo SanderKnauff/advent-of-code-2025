@@ -1,3 +1,4 @@
+use crate::stopwatch::time;
 use std::fs::read_to_string;
 
 pub fn run() {
@@ -14,11 +15,15 @@ pub fn run() {
         )
     });
 
-    run_part_1(example_data.as_str());
-    run_part_1(puzzle_data.as_str());
+    time("Day 2, Part 1 Example", || {
+        run_part_1(example_data.as_str())
+    });
+    time("Day 2, Part 1 Puzzle", || run_part_1(puzzle_data.as_str()));
 
-    run_part_2(example_data.as_str());
-    run_part_2(puzzle_data.as_str());
+    time("Day 2, Part 2 Example", || {
+        run_part_2(example_data.as_str())
+    });
+    time("Day 2, Part 2 Puzzle", || run_part_2(puzzle_data.as_str()));
 }
 
 struct IdRange {
