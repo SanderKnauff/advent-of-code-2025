@@ -38,7 +38,7 @@ fn run_part_1(input: &str) {
     let mut total_output_joltage = 0_u16;
 
     for bank in banks {
-        total_output_joltage += find_highest_joltage_from_two_batteries(&bank) as u16;
+        total_output_joltage += find_highest_joltage_combined_from_n_batteries(&bank, 2) as u16;
     }
 
     println!("The total output joltage is {}", total_output_joltage);
@@ -74,20 +74,6 @@ fn parse_banks(input: &str) -> Vec<Bank> {
     }
 
     banks
-}
-
-fn find_highest_joltage_from_two_batteries(bank: &Bank) -> u8 {
-    let mut highest_joltages = (0, 0);
-
-    for (index, joltage) in bank.battery_joltages.iter().enumerate() {
-        if joltage > &highest_joltages.0 && index != bank.battery_joltages.len() - 1 {
-            highest_joltages = (*joltage, 0);
-        } else if joltage > &highest_joltages.1 {
-            highest_joltages = (highest_joltages.0, *joltage);
-        }
-    }
-
-    (highest_joltages.0 * 10) + highest_joltages.1
 }
 
 fn find_highest_joltage_combined_from_n_batteries(
