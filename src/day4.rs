@@ -1,5 +1,7 @@
-use crate::stopwatch::time;
+use std::collections::HashSet;
 use std::fs::read_to_string;
+
+use crate::stopwatch::time;
 
 pub fn run() {
     let example_data = read_to_string("./puzzle-inputs/day-4-example.txt").unwrap_or_else(|err| {
@@ -64,13 +66,13 @@ fn run_part_2(input: &str) {
     );
 }
 
-fn parse_roll_positions(input: &str) -> Vec<(u8, u8)> {
-    let mut positions: Vec<(u8, u8)> = Vec::new();
+fn parse_roll_positions(input: &str) -> HashSet<(u8, u8)> {
+    let mut positions: HashSet<(u8, u8)> = HashSet::new();
 
     for (y, row) in input.lines().enumerate() {
         for (x, column) in row.chars().enumerate() {
             if column == '@' {
-                positions.push((x as u8, y as u8));
+                positions.insert((x as u8, y as u8));
             }
         }
     }
@@ -78,20 +80,20 @@ fn parse_roll_positions(input: &str) -> Vec<(u8, u8)> {
     positions
 }
 
-fn find_rolls_with_less_than_4_neighbours(positions: &[(u8, u8)]) -> Vec<(u8, u8)> {
-    let mut removable_roll_positions: Vec<(u8, u8)> = Vec::new();
+fn find_rolls_with_less_than_4_neighbours(positions: &HashSet<(u8, u8)>) -> HashSet<(u8, u8)> {
+    let mut removable_roll_positions: HashSet<(u8, u8)> = HashSet::new();
 
     for position in positions {
         let neighbours = count_neighbours(position, positions);
         if neighbours < 4 {
-            removable_roll_positions.push(*position);
+            removable_roll_positions.insert(*position);
         }
     }
 
     removable_roll_positions
 }
 
-fn count_neighbours(position: &(u8, u8), positions: &[(u8, u8)]) -> u16 {
+fn count_neighbours(position: &(u8, u8), positions: &HashSet<(u8, u8)>) -> u16 {
     let mut count: u16 = 0;
 
     count += match position.0.checked_sub(1) {
