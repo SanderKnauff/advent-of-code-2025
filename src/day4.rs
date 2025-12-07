@@ -132,17 +132,19 @@ fn count_neighbours(position: &(u8, u8), positions: &HashSet<(u8, u8)>) -> u16 {
         Some(x) => {
             let mut count = 0;
 
-            count += position
-                .1
-                .checked_sub(1)
-                .map(|y| positions.contains(&(x, y)))
-                .unwrap_or(false) as u16;
-            count += positions.contains(&(x, position.1)) as u16;
-            count += position
-                .1
-                .checked_add(1)
-                .map(|y| positions.contains(&(x, y)))
-                .unwrap_or(false) as u16;
+            count += u16::from(
+                position
+                    .1
+                    .checked_sub(1)
+                    .is_some_and(|y| positions.contains(&(x, y))),
+            );
+            count += u16::from(positions.contains(&(x, position.1)));
+            count += u16::from(
+                position
+                    .1
+                    .checked_add(1)
+                    .is_some_and(|y| positions.contains(&(x, y))),
+            );
 
             count
         }

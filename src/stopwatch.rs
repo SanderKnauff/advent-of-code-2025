@@ -5,5 +5,5 @@ pub fn time(name: &str, function_to_time: impl Fn()) {
     function_to_time();
     time.elapsed()
         .iter()
-        .for_each(|x| println!("{} took {:?} to run", name, x));
+        .for_each(|duration| println!("{name} took {duration:?} to run"));
 }

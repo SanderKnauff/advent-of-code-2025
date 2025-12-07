@@ -18,18 +18,18 @@ pub fn run() {
     });
 
     time("Day 5, Part 1 Example", || {
-        run_part_1(example_data.as_str())
+        run_part_1(example_data.as_str());
     });
     time("Day 5, Part 1 Puzzle", || run_part_1(puzzle_data.as_str()));
 
     time("Day 5, Part 2 Example", || {
-        run_part_2(example_data.as_str())
+        run_part_2(example_data.as_str());
     });
     time("Day 5, Part 2 Puzzle", || run_part_2(puzzle_data.as_str()));
 }
 
 fn run_part_1(input: &str) {
-    let sections = input.replace("\r", "");
+    let sections = input.replace('\r', "");
     let mut sections = sections.split("\n\n");
 
     let ranges_text = sections.next().expect("No ranges section found in input");
@@ -50,8 +50,7 @@ fn run_part_1(input: &str) {
     }
 
     println!(
-        "The total number of fresh ingredients is {}",
-        total_fresh_ingredients
+        "The total number of fresh ingredients is {total_fresh_ingredients}"
     );
 }
 
@@ -64,10 +63,10 @@ fn run_part_2(input: &str) {
 
     let mut total = 0;
     for range in merged_ranges {
-        total += range.size()
+        total += range.size();
     }
 
-    println!("The total number of fresh ingredients is {}", total);
+    println!("The total number of fresh ingredients is {total}");
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -108,10 +107,7 @@ fn read_ingredient_ranges(input: &str) -> Vec<IngredientRange> {
         }
 
         let split_at = id_range_text.find('-').unwrap_or_else(|| {
-            panic!(
-                "range of '{}' did not contain a `-` to split on",
-                id_range_text
-            )
+            panic!("range of '{id_range_text}' did not contain a `-` to split on")
         });
         let (first_id_text, last_id_text) = id_range_text.split_at(split_at);
         let last_id_text = &last_id_text[1..last_id_text.len()]; // Remove the leading `-` from the start of the last_id_text
@@ -119,10 +115,10 @@ fn read_ingredient_ranges(input: &str) -> Vec<IngredientRange> {
         let range = IngredientRange {
             first_id: first_id_text
                 .parse()
-                .unwrap_or_else(|e| panic!("Failed parsing id `{}`: {}", first_id_text, e)),
+                .unwrap_or_else(|e| panic!("Failed parsing id `{first_id_text}`: {e}")),
             last_id: last_id_text
                 .parse()
-                .unwrap_or_else(|e| panic!("Failed parsing id `{}`: {}", last_id_text, e)),
+                .unwrap_or_else(|e| panic!("Failed parsing id `{last_id_text}`: {e}")),
         };
 
         ids.push(range);
@@ -137,7 +133,7 @@ fn read_ingredients(input: &str) -> Vec<u64> {
         .map(|id_text| {
             id_text
                 .parse()
-                .unwrap_or_else(|e| panic!("Failed parsing id `{}`: {}", id_text, e))
+                .unwrap_or_else(|e| panic!("Failed parsing id `{id_text}`: {e}"))
         })
         .collect()
 }

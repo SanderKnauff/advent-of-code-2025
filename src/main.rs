@@ -12,12 +12,9 @@ fn main() {
     let mut args = env::args();
     let first_argument = args.nth(1);
 
-    let first_argument = match first_argument {
-        Some(arg) => arg,
-        None => {
-            println!("Please enter a day number");
-            return;
-        }
+    let Some(first_argument) = first_argument else {
+        println!("Please enter a day number");
+        return;
     };
 
     match first_argument.as_str() {
@@ -27,6 +24,6 @@ fn main() {
         "4" => day4::run(),
         "5" => day5::run(),
         "6" => day6::run(),
-        n => println!("Unknown day: {}", n),
+        unmatched_number => println!("Unknown day: {unmatched_number}"),
     }
 }
