@@ -340,6 +340,9 @@ fn test_shoot_beam_with_two_splitters_that_share_a_target() {
 #[test]
 fn test_simulate_particle_with_two_splitters() {
     let mut splitters = Vec::new();
+    //..S..
+    //..^..
+    //...^.
     splitters.push(Coordinate { x: 0, y: 1 });
     splitters.push(Coordinate { x: 1, y: 3 });
 
@@ -350,7 +353,7 @@ fn test_simulate_particle_with_two_splitters() {
 
     let splits = simulate_tachyon_particles(diagram);
 
-    assert_eq!(splits, 1);
+    assert_eq!(splits, 3);
 }
 
 #[test]

@@ -1,5 +1,8 @@
+extern crate core;
+
 use std::env;
 
+mod stopwatch;
 mod day1;
 mod day2;
 mod day3;
@@ -7,7 +10,7 @@ mod day4;
 mod day5;
 mod day6;
 mod day7;
-mod stopwatch;
+mod day8;
 
 fn main() {
     let mut args = env::args();
@@ -29,6 +32,7 @@ fn main() {
         "5" => day5::run(),
         "6" => day6::run(),
         "7" => day7::run(),
+        "8" => day8::run(),
         n => println!("Unknown day: {}", n),
     }
 }
