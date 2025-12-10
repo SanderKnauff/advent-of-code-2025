@@ -1,5 +1,5 @@
 use crate::stopwatch::time;
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::fs::read_to_string;
 
 pub fn run() {
@@ -108,42 +108,65 @@ fn shoot_beam(diagram: TachyonManifoldDiagram) -> u32 {
 }
 
 fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
-    let mut splitter_data: HashMap<Coordinate, Splitter> = diagram.splitters.iter()
-        .map(|coordinate| Splitter { coordinate: coordinate.clone(), amount_of_paths_to: 0, amount_of_paths_from: 0})
+    let mut splitter_data: HashMap<Coordinate, Splitter> = diagram
+        .splitters
+        .iter()
+        .map(|coordinate| Splitter {
+            coordinate: coordinate.clone(),
+            amount_of_paths_to: 0,
+            amount_of_paths_from: 0,
+        })
         .fold(HashMap::new(), |mut map, splitter| {
             map.insert(splitter.coordinate, splitter);
             map
         });
 
-    let mut splitters_at_x: HashMap<i32, Vec<Coordinate>> = diagram.splitters.iter()
-        .fold(HashMap::new(), |mut map, coordinate| {
-            let coordinates_at_x = map.entry(coordinate.x).or_insert(Vec::new());
-            coordinates_at_x.push(*coordinate);
-            coordinates_at_x.sort_by(|c1, c2| c1.x.cmp(&c2.x));
-            map
-        });
+    let mut splitters_at_x: HashMap<i32, Vec<Coordinate>> =
+        diagram
+            .splitters
+            .iter()
+            .fold(HashMap::new(), |mut map, coordinate| {
+                let coordinates_at_x = map.entry(coordinate.x).or_insert(Vec::new());
+                coordinates_at_x.push(*coordinate);
+                coordinates_at_x.sort_by(|c1, c2| c1.x.cmp(&c2.x));
+                map
+            });
 
-    let splitters_at_y: HashMap<i32, Vec<Coordinate>> = diagram.splitters.iter()
-        .fold(HashMap::new(), |mut map, coordinate| {
-            let coordinates_at_y = map.entry(coordinate.y).or_insert(Vec::new());
-            coordinates_at_y.push(*coordinate);
-            coordinates_at_y.sort_by(|c1, c2| c1.y.cmp(&c2.y));
-            map
-        });
+    let splitters_at_y: HashMap<i32, Vec<Coordinate>> =
+        diagram
+            .splitters
+            .iter()
+            .fold(HashMap::new(), |mut map, coordinate| {
+                let coordinates_at_y = map.entry(coordinate.y).or_insert(Vec::new());
+                coordinates_at_y.push(*coordinate);
+                coordinates_at_y.sort_by(|c1, c2| c1.y.cmp(&c2.y));
+                map
+            });
 
     // Init first splitter
-    let first_splitter = splitters_at_x.get(&diagram.beam_origin.x)
+    let first_splitter = splitters_at_x
+        .get(&diagram.beam_origin.x)
         .unwrap_or_else(|| panic!("Could not find splitters for X{}", diagram.beam_origin.x))
         .first()
-        .unwrap_or_else(|| panic!("Could not find first splitter for X{}", diagram.beam_origin.x));
-    let mut first_splitter = splitter_data.get_mut(&first_splitter)
+        .unwrap_or_else(|| {
+            panic!(
+                "Could not find first splitter for X{}",
+                diagram.beam_origin.x
+            )
+        });
+    let mut first_splitter = splitter_data
+        .get_mut(&first_splitter)
         .unwrap_or_else(|| panic!("Could not find splitter data for {:?}", first_splitter))
         .clone();
     first_splitter.amount_of_paths_to += 1;
     splitter_data.insert(first_splitter.coordinate, first_splitter);
 
-
-    let max_y = diagram.splitters.iter().map(|c| c.y).max().expect("Could not find any splitter to find the max Y");
+    let max_y = diagram
+        .splitters
+        .iter()
+        .map(|c| c.y)
+        .max()
+        .expect("Could not find any splitter to find the max Y");
     for y in 0..max_y {
         let Some(splitters) = splitters_at_y.get(&y) else {
             continue;
@@ -154,7 +177,8 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
             println!("Hit splitter @{:?}", splitter);
 
             let target_left = splitter.coordinate.x - 1;
-            let next_left = splitters_at_x.entry(target_left)
+            let next_left = splitters_at_x
+                .entry(target_left)
                 .or_insert(Vec::new())
                 .iter()
                 .filter(|splitter| splitter.x == target_left)
@@ -169,7 +193,8 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
             }
 
             let target_right = splitter.coordinate.x + 1;
-            let next_right = splitters_at_x.entry(target_right)
+            let next_right = splitters_at_x
+                .entry(target_right)
                 .or_insert(Vec::new())
                 .iter()
                 .filter(|splitter| splitter.x == target_right)
@@ -187,12 +212,14 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
         }
     }
 
-    let direct_endpoints: u64 = splitter_data.values()
+    let direct_endpoints: u64 = splitter_data
+        .values()
         .filter(|splitter| splitter.amount_of_paths_from == 0)
         .map(|splitter| (splitter.amount_of_paths_to * 2) as u64)
         .sum();
 
-    let indirect_endpoints: u64 = splitter_data.values()
+    let indirect_endpoints: u64 = splitter_data
+        .values()
         .filter(|splitter| splitter.amount_of_paths_from == 1)
         .map(|splitter| splitter.amount_of_paths_to as u64)
         .sum();
@@ -393,8 +420,7 @@ fn test_simulate_tachyon_particle() {
     splitters.push(Coordinate { x: 2, y: 2 });
     splitters.push(Coordinate { x: 1, y: 3 });
 
-    splitters.push(Coordinate { x: 2, y: 4 });  // Target Splitter
-
+    splitters.push(Coordinate { x: 2, y: 4 }); // Target Splitter
 
     let diagram = TachyonManifoldDiagram {
         beam_origin: Coordinate { x: 1, y: 0 },

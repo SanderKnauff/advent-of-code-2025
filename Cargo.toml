@@ -3,5 +3,9 @@ name = "aoc-2025"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-spart = "0.4.2"
+[dependencies] # Dependencies are only used for visualizations
+winit = "0.30.12"
+anyhow = "1.0.100"
+wgpu = "27.0.1"
+pollster = "0.4.0"
+vello = "0.6.0"

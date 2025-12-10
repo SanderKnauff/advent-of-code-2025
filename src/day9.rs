@@ -42,7 +42,10 @@ fn run_part_1(input: &str) -> u64 {
     size
 }
 
-fn run_part_2(_input: &str) -> u64 {
+fn run_part_2(input: &str) -> u64 {
+    let coordinates = parse_coordinates(input);
+
+    let perimeter = create_perimeter(&coordinates);
     // Create the perimeter of the grid
 
     // loop through all rectangles
@@ -51,14 +54,13 @@ fn run_part_2(_input: &str) -> u64 {
 
     // Filter by any rectangle that is entirely within the perimeter
 
-
     0
 }
 
 #[derive(Debug, Clone, Copy)]
-struct Coordinate {
-    x: u64,
-    y: u64,
+pub struct Coordinate {
+    pub x: u64,
+    pub y: u64,
 }
 
 impl Coordinate {
@@ -67,18 +69,47 @@ impl Coordinate {
     }
 }
 
-fn parse_coordinates(input: &str) -> Vec<Coordinate> {
-    input.lines()
-        .map(|line| parse_coordinate(line))
-        .collect()
+#[derive(Debug, Clone)]
+pub struct Perimeter {
+    pub edges: Vec<(Coordinate, Coordinate)>,
+}
+
+pub fn parse_coordinates(input: &str) -> Vec<Coordinate> {
+    input.lines().map(|line| parse_coordinate(line)).collect()
 }
 
 fn parse_coordinate(input: &str) -> Coordinate {
     let mut split = input.split(',');
     Coordinate {
-        x: split.next().unwrap_or_else(|| panic!("Coordinate {input} was missing X component")).parse::<u64>().unwrap(),
-        y: split.next().unwrap_or_else(|| panic!("Coordinate {input} was missing Y component")).parse::<u64>().unwrap(),
+        x: split
+            .next()
+            .unwrap_or_else(|| panic!("Coordinate {input} was missing X component"))
+            .parse::<u64>()
+            .unwrap(),
+        y: split
+            .next()
+            .unwrap_or_else(|| panic!("Coordinate {input} was missing Y component"))
+            .parse::<u64>()
+            .unwrap(),
     }
+}
+
+pub fn create_perimeter(coordinates: &[Coordinate]) -> Perimeter {
+    let mut edges = Vec::new();
+
+    let mut coordinate_iterator = coordinates.iter();
+    let first_coordinate = coordinate_iterator.next().unwrap_or_else(|| {
+        panic!("Failed creating perimeter: Coordinate slice did not return a first value.")
+    });
+    let mut current_coordinate = first_coordinate;
+    for next_coordinate in coordinate_iterator {
+        edges.push((current_coordinate.clone(), next_coordinate.clone()));
+        current_coordinate = next_coordinate;
+    }
+
+    edges.push((current_coordinate.clone(), first_coordinate.clone()));
+
+    Perimeter { edges }
 }
 
 fn find_largest_rectangle(coordinates: &[Coordinate]) -> (Coordinate, Coordinate) {
@@ -88,7 +119,12 @@ fn find_largest_rectangle(coordinates: &[Coordinate]) -> (Coordinate, Coordinate
             let area = first.calculate_area(second);
             if largest_area.is_none() {
                 largest_area = Some((first.clone(), second.clone()));
-            } else if area > largest_area.unwrap().0.calculate_area(&largest_area.unwrap().1) {
+            } else if area
+                > largest_area
+                    .unwrap()
+                    .0
+                    .calculate_area(&largest_area.unwrap().1)
+            {
                 largest_area = Some((first.clone(), second.clone()));
             }
         }
