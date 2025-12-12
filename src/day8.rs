@@ -34,7 +34,7 @@ pub fn run() {
     });
 }
 
-fn run_part_1(input: &str, connections_to_make: u32) -> u32 {
+fn run_part_1(input: &str, connections_to_make: usize) -> u32 {
     let junction_boxes = parse_junction_boxes(input);
 
     let distances: Vec<JunctionBoxDistance> = find_distances_between_points(&junction_boxes);
@@ -51,19 +51,17 @@ fn run_part_1(input: &str, connections_to_make: u32) -> u32 {
         circuits.insert(circuit.clone());
     });
 
-    let mut count = 0;
-    for distance in &distances {
+    for (count, distance) in distances.iter().enumerate() {
         if count > connections_to_make {
             break;
         }
 
         println!("[{count}]: Processing distance {:?}", distance);
 
-        let one = circuit_lookup.get(&distance.first_box.clone().into()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid first_box, circuit lookup does not have an entry for point {:?}", distance.first_box));
-        let other = circuit_lookup.get(&distance.second_box.clone().into()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid second_box, circuit lookup does not have an entry for point {:?}", distance.second_box));
+        let one = circuit_lookup.get(&distance.first_box.clone()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid first_box, circuit lookup does not have an entry for point {:?}", distance.first_box));
+        let other = circuit_lookup.get(&distance.second_box.clone()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid second_box, circuit lookup does not have an entry for point {:?}", distance.second_box));
 
         let is_same_circuit = one == other;
-        count += 1;
         if is_same_circuit {
             println!(
                 "Skipping distance {distance:?} because {one:?} and {other:?} are part of the same circuit"
@@ -83,7 +81,7 @@ fn run_part_1(input: &str, connections_to_make: u32) -> u32 {
 
     let mut circuits: Vec<usize> = circuits
         .iter()
-        .map(|circuit| circuit.junction_boxes.len().clone())
+        .map(|circuit| circuit.junction_boxes.len())
         .collect();
     circuits.sort_by(|a, b| b.cmp(a));
     let size: usize = circuits[..=2].iter().product();
@@ -111,8 +109,8 @@ fn run_part_2(input: &str) -> u64 {
     });
 
     for distance in &distances {
-        let one = circuit_lookup.get(&distance.first_box.clone().into()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid first_box, circuit lookup does not have an entry for point {:?}", distance.first_box));
-        let other = circuit_lookup.get(&distance.second_box.clone().into()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid second_box, circuit lookup does not have an entry for point {:?}", distance.second_box));
+        let one = circuit_lookup.get(&distance.first_box.clone()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid first_box, circuit lookup does not have an entry for point {:?}", distance.first_box));
+        let other = circuit_lookup.get(&distance.second_box.clone()).unwrap_or_else(|| panic!("Distance {distance:?} has invalid second_box, circuit lookup does not have an entry for point {:?}", distance.second_box));
 
         let is_same_circuit = one == other;
         if is_same_circuit {
@@ -177,7 +175,7 @@ fn merge_circuits(
     }
 }
 
-fn find_distances_between_points(junction_boxes: &Vec<JunctionBox>) -> Vec<JunctionBoxDistance> {
+fn find_distances_between_points(junction_boxes: &[JunctionBox]) -> Vec<JunctionBoxDistance> {
     let mut distances: Vec<JunctionBoxDistance> = Vec::new();
 
     for (index, first_box) in junction_boxes.iter().enumerate() {
@@ -187,7 +185,7 @@ fn find_distances_between_points(junction_boxes: &Vec<JunctionBox>) -> Vec<Junct
             }
 
             distances.push(JunctionBoxDistance {
-                distance: first_box.distance_sq(&second_box) as u64,
+                distance: first_box.distance_sq(second_box),
                 first_box: first_box.clone(),
                 second_box: second_box.clone(),
             });
@@ -222,7 +220,7 @@ struct JunctionBoxDistance {
 
 impl PartialOrd for JunctionBoxDistance {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.distance.partial_cmp(&other.distance)
+        Some(self.cmp(other))
     }
 }
 

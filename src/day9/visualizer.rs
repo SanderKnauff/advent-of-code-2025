@@ -12,9 +12,9 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::window::Window;
 
-use crate::day9::{Perimeter, create_perimeter, parse_coordinates};
 use vello::wgpu;
-use winit::platform::windows::EventLoopBuilderExtWindows;
+use crate::day9::core::{create_perimeter, parse_coordinates};
+use crate::day9::perimeter::Perimeter;
 
 #[derive(Debug)]
 enum RenderState {
@@ -193,7 +193,7 @@ pub fn render(perimeter: &Perimeter) -> Result<()> {
     };
 
     // Create and run a winit event loop
-    let event_loop = EventLoop::builder().with_any_thread(true).build()?;
+    let event_loop = EventLoop::builder().build()?;
     event_loop
         .run_app(&mut app)
         .expect("Couldn't run event loop");
@@ -223,22 +223,22 @@ fn create_vello_renderer(render_cx: &RenderContext, surface: &RenderSurface<'_>)
 fn draw_perimeter(scene: &mut Scene, perimeter: &Perimeter, width: f64, height: f64) {
     let bounds = find_perimeter_bounds(perimeter);
 
-    let perimeter_width = (bounds.x_max - bounds.x_min);
-    let perimeter_height = (bounds.y_max - bounds.y_min);
+    let perimeter_width = bounds.x_max - bounds.x_min;
+    let perimeter_height = bounds.y_max - bounds.y_min;
 
     let width_scale = width / perimeter_width;
     let height_scale = height / perimeter_height;
 
-    for (first, second) in &perimeter.edges[..] {
+    for edge in &perimeter.edges[..] {
         let stroke = Stroke::new(1.0);
         let line = Line::new(
             (
-                (first.x as f64 - bounds.x_min) * width_scale,
-                (first.y as f64 - bounds.y_min) * height_scale,
+                (edge.start.x as f64 - bounds.x_min) * width_scale,
+                (edge.start.y as f64 - bounds.y_min) * height_scale,
             ),
             (
-                (second.x as f64 - bounds.x_min) * width_scale,
-                (second.y as f64 - bounds.y_min) * height_scale,
+                (edge.end.x as f64 - bounds.x_min) * width_scale,
+                (edge.end.y as f64 - bounds.y_min) * height_scale,
             ),
         );
         scene.stroke(
@@ -251,10 +251,10 @@ fn draw_perimeter(scene: &mut Scene, perimeter: &Perimeter, width: f64, height: 
 
         let stroke = Stroke::new(1.0);
         let rect = RoundedRect::new(
-            (first.x as f64 - bounds.x_min) * width_scale,
-            (first.y as f64 - bounds.y_min) * height_scale,
-            ((first.x as f64 - bounds.x_min) * width_scale) + 1.,
-            ((first.y as f64 - bounds.y_min) * height_scale) + 1.,
+            (edge.start.x as f64 - bounds.x_min) * width_scale,
+            (edge.start.y as f64 - bounds.y_min) * height_scale,
+            ((edge.start.x as f64 - bounds.x_min) * width_scale) + 1.,
+            ((edge.start.y as f64 - bounds.y_min) * height_scale) + 1.,
             1.,
         );
         let rect_stroke_color = Color::new([1., 0., 0., 1.]);
@@ -262,10 +262,10 @@ fn draw_perimeter(scene: &mut Scene, perimeter: &Perimeter, width: f64, height: 
 
         let stroke = Stroke::new(1.0);
         let rect = RoundedRect::new(
-            (second.x as f64 - bounds.x_min) * width_scale,
-            (second.y as f64 - bounds.y_min) * height_scale,
-            ((second.x as f64 - bounds.x_min) * width_scale) + 1.,
-            ((second.y as f64 - bounds.y_min) * height_scale) + 1.,
+            (edge.end.x as f64 - bounds.x_min) * width_scale,
+            (edge.end.y as f64 - bounds.y_min) * height_scale,
+            ((edge.end.x as f64 - bounds.x_min) * width_scale) + 1.,
+            ((edge.end.y as f64 - bounds.y_min) * height_scale) + 1.,
             1.,
         );
         let rect_stroke_color = Color::new([1., 0., 0., 1.]);
@@ -288,8 +288,8 @@ fn find_perimeter_bounds(perimeter: &Perimeter) -> Bounds {
         y_max: f64::MIN,
     };
 
-    for (c1, c2) in &perimeter.edges[..] {
-        for coordinate in [c1, c2] {
+    for edge in &perimeter.edges[..] {
+        for coordinate in [edge.start, edge.end] {
             bounds.x_min = bounds.x_min.min(coordinate.x as f64);
             bounds.x_max = bounds.x_max.max(coordinate.x as f64);
             bounds.y_min = bounds.y_min.min(coordinate.y as f64);
@@ -300,8 +300,7 @@ fn find_perimeter_bounds(perimeter: &Perimeter) -> Bounds {
     bounds
 }
 
-#[test]
-fn test_run_example_part_2() {
+pub fn run() {
     let path = "./puzzle-inputs/day-9-input.txt";
     let example_data =
         read_to_string(path).unwrap_or_else(|err| panic!("Failed to read file {path}: {err}"));
@@ -309,5 +308,5 @@ fn test_run_example_part_2() {
     let coordinates = parse_coordinates(example_data.as_str());
     let perimeter = create_perimeter(&coordinates);
 
-    render(&perimeter);
+    render(&perimeter).unwrap_or_else(|err| panic!("Failed rendering perimeter: {err}"));
 }

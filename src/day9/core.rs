@@ -1,5 +1,9 @@
 use crate::stopwatch::time;
+use std::error::Error;
 use std::fs::read_to_string;
+use crate::day9::geometry_primitives::{Coordinate, Edge};
+use crate::day9::perimeter::Perimeter;
+use crate::day9::rectangle::Rectangle;
 
 pub fn run() {
     let example_data = read_to_string("./puzzle-inputs/day-9-example.txt").unwrap_or_else(|err| {
@@ -35,7 +39,7 @@ fn run_part_1(input: &str) -> u64 {
 
     let largest_rectangle = find_largest_rectangle(&coordinates);
 
-    let size = largest_rectangle.0.calculate_area(&largest_rectangle.1);
+    let size = largest_rectangle.calculate_area();
 
     println!("Largest rectangle has an area of {size}");
 
@@ -44,8 +48,22 @@ fn run_part_1(input: &str) -> u64 {
 
 fn run_part_2(input: &str) -> u64 {
     let coordinates = parse_coordinates(input);
+    let rectangles = create_rectangles(&coordinates);
 
     let perimeter = create_perimeter(&coordinates);
+
+    let largest_fitting_rectangle = rectangles
+        .iter()
+        .filter(|rectangle| perimeter.contains(rectangle))
+        .max_by(|first, second| first.calculate_area().cmp(&second.calculate_area()))
+        .expect("Could not find any fitting rectangle");
+
+    println!(
+        "The largest fitting rectangle in the perimeter is {:?} with an area of {}",
+        largest_fitting_rectangle,
+        largest_fitting_rectangle.calculate_area()
+    );
+
     // Create the perimeter of the grid
 
     // loop through all rectangles
@@ -54,28 +72,11 @@ fn run_part_2(input: &str) -> u64 {
 
     // Filter by any rectangle that is entirely within the perimeter
 
-    0
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Coordinate {
-    pub x: u64,
-    pub y: u64,
-}
-
-impl Coordinate {
-    fn calculate_area(&self, other: &Coordinate) -> u64 {
-        (self.x.abs_diff(other.x) + 1) * (self.y.abs_diff(other.y) + 1)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Perimeter {
-    pub edges: Vec<(Coordinate, Coordinate)>,
+    largest_fitting_rectangle.calculate_area()
 }
 
 pub fn parse_coordinates(input: &str) -> Vec<Coordinate> {
-    input.lines().map(|line| parse_coordinate(line)).collect()
+    input.lines().map(parse_coordinate).collect()
 }
 
 fn parse_coordinate(input: &str) -> Coordinate {
@@ -95,42 +96,45 @@ fn parse_coordinate(input: &str) -> Coordinate {
 }
 
 pub fn create_perimeter(coordinates: &[Coordinate]) -> Perimeter {
-    let mut edges = Vec::new();
+    let mut edges: Vec<Edge> = Vec::new();
 
     let mut coordinate_iterator = coordinates.iter();
     let first_coordinate = coordinate_iterator.next().unwrap_or_else(|| {
         panic!("Failed creating perimeter: Coordinate slice did not return a first value.")
     });
+
     let mut current_coordinate = first_coordinate;
     for next_coordinate in coordinate_iterator {
-        edges.push((current_coordinate.clone(), next_coordinate.clone()));
+        let edge = Edge::new(current_coordinate, next_coordinate).unwrap_or_else(|err| panic!("{err}"));
+        edges.push(edge);
         current_coordinate = next_coordinate;
     }
 
-    edges.push((current_coordinate.clone(), first_coordinate.clone()));
+    let edge = Edge::new(current_coordinate, first_coordinate).unwrap_or_else(|err| panic!("{err}"));
+    edges.push(edge);
 
     Perimeter { edges }
 }
 
-fn find_largest_rectangle(coordinates: &[Coordinate]) -> (Coordinate, Coordinate) {
-    let mut largest_area: Option<(Coordinate, Coordinate)> = None;
+fn create_rectangles(coordinates: &[Coordinate]) -> Vec<Rectangle> {
+    let mut rectangles: Vec<Rectangle> = Vec::new();
     for (index, first) in coordinates.iter().enumerate() {
         for second in coordinates[index..].iter() {
-            let area = first.calculate_area(second);
-            if largest_area.is_none() {
-                largest_area = Some((first.clone(), second.clone()));
-            } else if area
-                > largest_area
-                    .unwrap()
-                    .0
-                    .calculate_area(&largest_area.unwrap().1)
-            {
-                largest_area = Some((first.clone(), second.clone()));
-            }
+            rectangles.push(Rectangle {
+                first_corner: *first,
+                second_corner: *second,
+            })
         }
     }
 
-    largest_area.unwrap_or_else(|| panic!("No squares found"))
+    rectangles
+}
+
+fn find_largest_rectangle(coordinates: &[Coordinate]) -> Rectangle {
+    *create_rectangles(coordinates)
+        .iter()
+        .max_by(|first, second| first.calculate_area().cmp(&second.calculate_area()))
+        .expect("Could not find rectangle")
 }
 
 #[test]

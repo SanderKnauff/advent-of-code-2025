@@ -9,7 +9,6 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
-mod day9visualizer;
 mod stopwatch;
 
 fn main() {
@@ -33,7 +32,8 @@ fn main() {
         "6" => day6::run(),
         "7" => day7::run(),
         "8" => day8::run(),
-        "9" => day9::run(),
+        "9" => day9::core::run(),
+        "9-vis" => day9::visualizer::run(),
         n => println!("Unknown day: {}", n),
     }
 }

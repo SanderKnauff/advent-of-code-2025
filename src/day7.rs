@@ -60,7 +60,7 @@ fn shoot_beam(diagram: TachyonManifoldDiagram) -> u32 {
     while !beam_origins.is_empty() {
         let mut origins_for_iteration: Vec<Coordinate> = Vec::new();
         beam_origins.iter().for_each(|origin| {
-            origins_for_iteration.push(origin.clone());
+            origins_for_iteration.push(*origin);
         });
         beam_origins.clear();
 
@@ -112,7 +112,7 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
         .splitters
         .iter()
         .map(|coordinate| Splitter {
-            coordinate: coordinate.clone(),
+            coordinate: *coordinate,
             amount_of_paths_to: 0,
             amount_of_paths_from: 0,
         })
@@ -155,7 +155,7 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
             )
         });
     let mut first_splitter = splitter_data
-        .get_mut(&first_splitter)
+        .get_mut(first_splitter)
         .unwrap_or_else(|| panic!("Could not find splitter data for {:?}", first_splitter))
         .clone();
     first_splitter.amount_of_paths_to += 1;
@@ -179,7 +179,7 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
             let target_left = splitter.coordinate.x - 1;
             let next_left = splitters_at_x
                 .entry(target_left)
-                .or_insert(Vec::new())
+                .or_default()
                 .iter()
                 .filter(|splitter| splitter.x == target_left)
                 .find(|coordinate| coordinate.y > splitter.coordinate.y);
@@ -195,7 +195,7 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
             let target_right = splitter.coordinate.x + 1;
             let next_right = splitters_at_x
                 .entry(target_right)
-                .or_insert(Vec::new())
+                .or_default()
                 .iter()
                 .filter(|splitter| splitter.x == target_right)
                 .find(|coordinate| coordinate.y > splitter.coordinate.y);
@@ -215,13 +215,13 @@ fn simulate_tachyon_particles(diagram: TachyonManifoldDiagram) -> u64 {
     let direct_endpoints: u64 = splitter_data
         .values()
         .filter(|splitter| splitter.amount_of_paths_from == 0)
-        .map(|splitter| (splitter.amount_of_paths_to * 2) as u64)
+        .map(|splitter| splitter.amount_of_paths_to * 2)
         .sum();
 
     let indirect_endpoints: u64 = splitter_data
         .values()
         .filter(|splitter| splitter.amount_of_paths_from == 1)
-        .map(|splitter| splitter.amount_of_paths_to as u64)
+        .map(|splitter| splitter.amount_of_paths_to)
         .sum();
 
     direct_endpoints + indirect_endpoints
