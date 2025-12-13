@@ -1,9 +1,9 @@
+use crate::stopwatch::time;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Write};
 use std::fs::read_to_string;
 use std::ops::{Add, BitAnd, BitXor};
 use std::str::FromStr;
-use crate::stopwatch::time;
 
 pub fn run() {
     let example_data = read_to_string("./puzzle-inputs/day-10-example.txt").unwrap_or_else(|err| {
@@ -40,7 +40,8 @@ fn run_part_1(input: &str) -> u16 {
 
     let machines: Vec<Machine> = parse_machines(input.as_str());
 
-    let minimal_button_presses = machines.iter()
+    let minimal_button_presses = machines
+        .iter()
         .map(|machine| {
             let buttons = machine.find_least_amount_of_buttons_to_enable_machine();
 
@@ -48,7 +49,9 @@ fn run_part_1(input: &str) -> u16 {
         })
         .sum();
 
-    println!("It takes a minimum of {minimal_button_presses} presses to enable all lights on all machines.");
+    println!(
+        "It takes a minimum of {minimal_button_presses} presses to enable all lights on all machines."
+    );
 
     minimal_button_presses
 }
@@ -58,7 +61,8 @@ fn run_part_2(input: &str) -> u16 {
 
     let machines: Vec<Machine> = parse_machines(input.as_str());
 
-    let minimal_button_presses: u16 = machines.iter()
+    let minimal_button_presses: u16 = machines
+        .iter()
         .map(|machine| {
             let buttons = machine.find_least_amount_of_buttons_to_configure_machine();
 
@@ -68,7 +72,9 @@ fn run_part_2(input: &str) -> u16 {
         })
         .sum();
 
-    println!("It takes a minimum of {minimal_button_presses} presses to enable all lights on all machines.");
+    println!(
+        "It takes a minimum of {minimal_button_presses} presses to enable all lights on all machines."
+    );
 
     minimal_button_presses
 }
@@ -76,7 +82,7 @@ fn run_part_2(input: &str) -> u16 {
 struct Machine {
     wanted_indicators: IndicatorLights,
     buttons: Vec<Button>,
-    joltages: Vec<u16>
+    joltages: Vec<u16>,
 }
 
 impl Machine {
@@ -86,8 +92,8 @@ impl Machine {
 
         let mut depth: Option<Vec<Button>> = None;
 
-        'search_loop:
-        for _ in 0..1000 { // Iterate only 1000 times as failsafe.
+        'search_loop: for _ in 0..1000 {
+            // Iterate only 1000 times as failsafe.
             for (state, buttons) in nodes.clone().iter() {
                 for button in &self.buttons {
                     let new_state = button.toggle_indicators(*state);
@@ -98,8 +104,7 @@ impl Machine {
                         continue;
                     }
 
-                    let node_for_state = nodes.entry(new_state)
-                         .or_insert_with(|| buttons);
+                    let node_for_state = nodes.entry(new_state).or_insert_with(|| buttons);
 
                     node_for_state.push(button.clone());
 
@@ -120,8 +125,8 @@ impl Machine {
 
         let mut depth: Option<Vec<Button>> = None;
 
-        'search_loop:
-        for _ in 0..1000 { // Iterate only 1000 times as failsafe.
+        'search_loop: for _ in 0..1000 {
+            // Iterate only 1000 times as failsafe.
             for (state, buttons) in nodes.clone().iter() {
                 for button in &self.buttons {
                     let new_state: Vec<u16> = button.toggle_joltages(state);
@@ -132,8 +137,7 @@ impl Machine {
                         continue;
                     }
 
-                    let node_for_state = nodes.entry(new_state.clone())
-                         .or_insert_with(|| buttons);
+                    let node_for_state = nodes.entry(new_state.clone()).or_insert_with(|| buttons);
 
                     node_for_state.push(button.clone());
 
@@ -161,7 +165,9 @@ impl Machine {
 
 impl Display for Machine {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let joined_buttons = self.buttons.iter()
+        let joined_buttons = self
+            .buttons
+            .iter()
             .map(|button| button.to_string())
             .fold(String::new(), |acc, s| acc + " " + &s);
 
@@ -171,7 +177,7 @@ impl Display for Machine {
 
 struct IndicatorLights {
     amount_of_lights: u8,
-    lights: u16
+    lights: u16,
 }
 
 impl Display for IndicatorLights {
@@ -196,7 +202,7 @@ impl Display for IndicatorLights {
 
 #[derive(Debug, Copy, Clone)]
 struct Button {
-    toggles: u16
+    toggles: u16,
 }
 
 impl Button {
@@ -230,8 +236,8 @@ impl Display for Button {
             // println!("Light to check: {light_to_check}, Expected: {expected}. All: {}", self.lights);
 
             if expected == bit_to_check {
-            f.write_str(format!("{}", i).as_str())?;
-            f.write_char(',')?;
+                f.write_str(format!("{}", i).as_str())?;
+                f.write_char(',')?;
             }
         }
 
@@ -240,14 +246,16 @@ impl Display for Button {
 }
 
 fn parse_machines(input: &str) -> Vec<Machine> {
-    input.lines()
-        .map(parse_machine)
-        .collect()
+    input.lines().map(parse_machine).collect()
 }
 
 fn parse_machine(input: &str) -> Machine {
-    let button_index = input.find('(').unwrap_or_else(|| panic!("Could not find button section start '(' in {input}"));
-    let joltage_index = input.find('{').unwrap_or_else(|| panic!("Could not find joltage section start '{{' in {input}"));
+    let button_index = input
+        .find('(')
+        .unwrap_or_else(|| panic!("Could not find button section start '(' in {input}"));
+    let joltage_index = input
+        .find('{')
+        .unwrap_or_else(|| panic!("Could not find joltage section start '{{' in {input}"));
 
     let indicator_string = &input[..button_index];
     let button_string = &input[button_index..joltage_index];
@@ -278,7 +286,7 @@ fn parse_indicators(input: &str) -> IndicatorLights {
                 let bits = 1 << index;
                 indicators = indicators.add(bits)
             }
-            other => panic!("Unexpected character '{other}' in indicator input")
+            other => panic!("Unexpected character '{other}' in indicator input"),
         }
         amount += 1;
     }
@@ -292,24 +300,21 @@ fn parse_indicators(input: &str) -> IndicatorLights {
 fn parse_buttons(input: &str) -> Vec<Button> {
     let input = input.trim();
 
-    input.split(' ')
-        .map(parse_button)
-        .collect()
+    input.split(' ').map(parse_button).collect()
 }
 
 fn parse_button(input: &str) -> Button {
     let input = input.replace('(', "");
     let input = input.replace(')', "");
 
-    let toggles = input.split(',')
+    let toggles = input
+        .split(',')
         .map(u8::from_str)
         .map(|result| result.unwrap_or_else(|err| panic!("Failed parsing to u8: {err}")))
         .map(|index| 1 << index)
         .sum();
 
-    Button {
-        toggles,
-    }
+    Button { toggles }
 }
 
 fn parse_joltages(input: &str) -> Vec<u16> {
@@ -317,7 +322,8 @@ fn parse_joltages(input: &str) -> Vec<u16> {
     let input = input.replace('}', "");
     let input = input.trim();
 
-    input.split(',')
+    input
+        .split(',')
         .map(u16::from_str)
         .map(|result| result.unwrap_or_else(|err| panic!("Failed parsing to u8: {err}")))
         .collect()
@@ -345,43 +351,77 @@ fn test_toggle_machine() {
 }
 
 #[test]
-fn test_find_least_amount_of_buttons_to_enable_machines(){
+fn test_find_least_amount_of_buttons_to_enable_machines() {
     let machine = parse_machine("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
-    assert_eq!(machine.find_least_amount_of_buttons_to_enable_machine().len(), 2);
+    assert_eq!(
+        machine
+            .find_least_amount_of_buttons_to_enable_machine()
+            .len(),
+        2
+    );
 
     let machine = parse_machine("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
-    assert_eq!(machine.find_least_amount_of_buttons_to_enable_machine().len(), 3);
+    assert_eq!(
+        machine
+            .find_least_amount_of_buttons_to_enable_machine()
+            .len(),
+        3
+    );
 
     let machine = parse_machine("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
-    assert_eq!(machine.find_least_amount_of_buttons_to_enable_machine().len(), 2);
+    assert_eq!(
+        machine
+            .find_least_amount_of_buttons_to_enable_machine()
+            .len(),
+        2
+    );
 }
 
 #[test]
-fn test_example_two(){
+fn test_example_two() {
     let machine = parse_machine("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
-    assert_eq!(machine.find_least_amount_of_buttons_to_enable_machine().len(), 3);
+    assert_eq!(
+        machine
+            .find_least_amount_of_buttons_to_enable_machine()
+            .len(),
+        3
+    );
 }
 
 #[test]
-fn test_example_manual(){
+fn test_example_manual() {
     let machine = parse_machine("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
     let mut state = 0;
     state = machine.buttons[2].toggle_indicators(state);
     state = machine.buttons[3].toggle_indicators(state);
     state = machine.buttons[4].toggle_indicators(state);
 
-
     assert_eq!(state, machine.wanted_indicators.lights);
 }
 
 #[test]
-fn test_find_least_amount_of_buttons_to_configure_machines(){
+fn test_find_least_amount_of_buttons_to_configure_machines() {
     let machine = parse_machine("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
-    assert_eq!(machine.find_least_amount_of_buttons_to_configure_machine().len(), 10);
+    assert_eq!(
+        machine
+            .find_least_amount_of_buttons_to_configure_machine()
+            .len(),
+        10
+    );
 
     let machine = parse_machine("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
-    assert_eq!(machine.find_least_amount_of_buttons_to_configure_machine().len(), 12);
+    assert_eq!(
+        machine
+            .find_least_amount_of_buttons_to_configure_machine()
+            .len(),
+        12
+    );
 
     let machine = parse_machine("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
-    assert_eq!(machine.find_least_amount_of_buttons_to_configure_machine().len(), 11);
+    assert_eq!(
+        machine
+            .find_least_amount_of_buttons_to_configure_machine()
+            .len(),
+        11
+    );
 }

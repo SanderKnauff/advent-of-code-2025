@@ -51,7 +51,6 @@ fn run_part_2(_input: &str) -> u64 {
 
     // Filter by any rectangle that is entirely within the perimeter
 
-
     0
 }
 
@@ -68,16 +67,22 @@ impl Coordinate {
 }
 
 fn parse_coordinates(input: &str) -> Vec<Coordinate> {
-    input.lines()
-        .map(|line| parse_coordinate(line))
-        .collect()
+    input.lines().map(|line| parse_coordinate(line)).collect()
 }
 
 fn parse_coordinate(input: &str) -> Coordinate {
     let mut split = input.split(',');
     Coordinate {
-        x: split.next().unwrap_or_else(|| panic!("Coordinate {input} was missing X component")).parse::<u64>().unwrap(),
-        y: split.next().unwrap_or_else(|| panic!("Coordinate {input} was missing Y component")).parse::<u64>().unwrap(),
+        x: split
+            .next()
+            .unwrap_or_else(|| panic!("Coordinate {input} was missing X component"))
+            .parse::<u64>()
+            .unwrap(),
+        y: split
+            .next()
+            .unwrap_or_else(|| panic!("Coordinate {input} was missing Y component"))
+            .parse::<u64>()
+            .unwrap(),
     }
 }
 
@@ -88,7 +93,12 @@ fn find_largest_rectangle(coordinates: &[Coordinate]) -> (Coordinate, Coordinate
             let area = first.calculate_area(second);
             if largest_area.is_none() {
                 largest_area = Some((first.clone(), second.clone()));
-            } else if area > largest_area.unwrap().0.calculate_area(&largest_area.unwrap().1) {
+            } else if area
+                > largest_area
+                    .unwrap()
+                    .0
+                    .calculate_area(&largest_area.unwrap().1)
+            {
                 largest_area = Some((first.clone(), second.clone()));
             }
         }
