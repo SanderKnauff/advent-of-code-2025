@@ -4,26 +4,34 @@ use std::fs::read_to_string;
 use std::hash::Hash;
 
 pub fn run() {
-    let example_data = read_to_string("../puzzle-inputs/day-11-example-1.txt").unwrap_or_else(|_| {
+    let example_data_1 = read_to_string("./puzzle-inputs/day-11-example-1.txt").unwrap_or_else(|_| {
         panic!(
             "Failed to read file {}",
-            "./puzzle-inputs/day-11-example.txt"
+            "./puzzle-inputs/day-11-example-1.txt"
+        )
+    });
+    let example_data_2 = read_to_string("./puzzle-inputs/day-11-example-2.txt").unwrap_or_else(|_| {
+        panic!(
+            "Failed to read file {}",
+            "./puzzle-inputs/day-11-example-1.txt"
         )
     });
     let puzzle_data = read_to_string("./puzzle-inputs/day-11-input.txt")
         .unwrap_or_else(|_| panic!("Failed to read file {}", "./puzzle-inputs/day-11-input.txt"));
 
     time("Day 11, Part 1 Example", || {
-        run_part_1(example_data.as_str());
+        run_part_1(example_data_1.as_str());
     });
     time("Day 11, Part 1 Puzzle", || {
         run_part_1(puzzle_data.as_str());
     });
 
     time("Day 11, Part 2 Example", || {
-        run_part_2(example_data.as_str())
+        run_part_2(example_data_2.as_str());
     });
-    time("Day 11, Part 2 Puzzle", || run_part_2(puzzle_data.as_str()));
+    time("Day 11, Part 2 Puzzle", || {
+        run_part_2(puzzle_data.as_str());
+    });
 }
 
 fn run_part_1(input: &str) -> u64 {
@@ -36,7 +44,23 @@ fn run_part_1(input: &str) -> u64 {
     result
 }
 
-fn run_part_2(_input: &str) {}
+fn run_part_2(input: &str) -> u64 {
+    let graph = parse_graph(input);
+
+    let svr_to_fft = graph.find_paths_through(Box::from("svr"), Box::from("fft"));
+    let fft_to_dac = graph.find_paths_through(Box::from("fft"), Box::from("dac"));
+    let dac_to_out = graph.find_paths_through(Box::from("dac"), Box::from("out"));
+
+    let svr_to_dac = graph.find_paths_through(Box::from("svr"), Box::from("dac"));
+    let dac_to_fft = graph.find_paths_through(Box::from("dac"), Box::from("fft"));
+    let fft_to_out = graph.find_paths_through(Box::from("fft"), Box::from("out"));
+
+    let result = (svr_to_fft * fft_to_dac * dac_to_out) + (svr_to_dac * dac_to_fft * fft_to_out);
+
+    println!("The number of paths from `svr` to `out` through `fft` and `dac` is {}", result);
+
+    result
+}
 
 struct Graph {
     nodes: HashMap<Box<str>, Node>,
@@ -80,6 +104,42 @@ impl Graph {
             .get(&end_node.identity)
             .unwrap_or_else(|| panic!("Could not find any path from {} to {}", from, to))
             .clone()
+    }
+
+    fn find_paths_through(&self, from: Box<str>, to: Box<str>) -> u64 {
+        self.dfs(&from, &to, &mut HashSet::new(), &mut HashMap::new())
+    }
+
+    fn dfs(&self, from: &Box<str>, to: &Box<str>, visited: &mut HashSet<Box<str>>, memo: &mut HashMap<Box<str>, u64>) -> u64 {
+        if memo.contains_key(from) {
+            return memo.get(from).unwrap_or(&0).clone();
+        }
+
+
+        if from == to {
+            return 1
+        }
+
+        let from = self.nodes.get(from).unwrap_or_else(|| panic!("Could not find node with identity '{}'", from));
+
+        visited.insert(from.identity.clone());
+
+        let mut visited_sorted = visited.iter().cloned()
+            .collect::<Vec<_>>();
+        visited_sorted.sort();
+
+        let mut paths = 0;
+        for child in &from.destinations {
+            if visited.contains(child) {
+                continue;
+            }
+            paths += self.dfs(child, to, visited, memo);
+        }
+
+        visited.remove(&from.identity.clone());
+        memo.insert(from.identity.clone(), paths);
+
+        paths
     }
 }
 
@@ -136,14 +196,28 @@ fn read_and_insert_node(line: &str) -> Node {
 
 #[test]
 fn test_example_1() {
-    let example_data = read_to_string("../puzzle-inputs/day-11-example-1.txt").unwrap_or_else(|_| {
+    let example_data = read_to_string("./puzzle-inputs/day-11-example-1.txt").unwrap_or_else(|_| {
         panic!(
             "Failed to read file {}",
-            "./puzzle-inputs/day-11-example.txt"
+            "./puzzle-inputs/day-11-example-1.txt"
         )
     });
 
     let result = run_part_1(example_data.as_str());
 
     assert_eq!(result, 5);
+}
+
+#[test]
+fn test_example_2() {
+    let example_data = read_to_string("./puzzle-inputs/day-11-example-2.txt").unwrap_or_else(|_| {
+        panic!(
+            "Failed to read file {}",
+            "./puzzle-inputs/day-11-example-2.txt"
+        )
+    });
+
+    let result = run_part_2(example_data.as_str());
+
+    assert_eq!(result, 2);
 }
